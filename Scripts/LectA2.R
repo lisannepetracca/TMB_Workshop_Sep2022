@@ -1,6 +1,6 @@
 setwd("G:/My Drive/GitHub/TMB_Workshop_Sep2022/Scripts")
 data <- read.table("LectA2.dat", header=TRUE) #data stored in data file
-parameters <- list(b0=0, b1=0, logSigma=0) #initialize these params at 0
+parameters <- list(b0=0, b1=0, logSigma=0) #initialize these params at 0; logSigma means cannot be negative
 
 require(TMB)
 compile("LectA2.cpp", flags="-Wno-ignored-attributes") #compile; "who-ignored-attributes" removes warnings so that finding errors is easier
