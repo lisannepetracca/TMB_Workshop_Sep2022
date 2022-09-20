@@ -1,5 +1,5 @@
 #include <TMB.hpp>
-
+// ok so this appears to be repeat of LectB2.cpp
 
 template<class Type>
 Type posfun(Type x, Type eps, Type &pen) //writing a function; &pen allows that value to be changed outside of fct
