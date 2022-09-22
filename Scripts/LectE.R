@@ -1,4 +1,4 @@
-setwd("C:\\courses\\FISH 559_22\\TMB Workshop\\Lecture Examples\\")
+setwd("G:/My Drive/GitHub/TMB_Workshop_Sep2022/Scripts")
 
 
 
@@ -75,12 +75,12 @@ Corrn <- matrix(0,nrow=length(best),ncol=length(best))
 for (II in 1:length(best))
  for (JJ in 1:length(best))  
   Corrn[II,JJ] <- VarCo[II,JJ]/sqrt(Var[II]*Var[JJ])  
-print(round(Corrn,3))
+print(round(Corrn,3)) #this is showing where some parameters may be correlated
 
 # Likelihood profile for 
 prof <- tmbprofile(model,"Sel50",trace=F)
 plot(prof)
-print(confint(prof, level = 0.8))
+print(confint(prof, level = 0.8)) #this method can check reliability of asymptotic variance estimates; if asymmetric, the asymptotic may not be good estimate
 print(confint(prof, level = 0.9))
 print(confint(prof, level = 0.95))
 

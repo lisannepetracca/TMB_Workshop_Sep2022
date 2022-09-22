@@ -1,4 +1,4 @@
-setwd("C:\\courses\\FISH 559_22\\TMB Workshop\\In Class Assignments\\Ex6")
+setwd("G:/My Drive/GitHub/TMB_Workshop_Sep2022/Examples/Ex6")
 
 # ========================================================================================================
 
@@ -21,8 +21,8 @@ DoPlots <- function(hake)
 require(TMB)
 compile("Ex6Class.cpp", flags="-Wno-ignored-attributes")
 dyn.load(dynlib("Ex6Class"))
-compile("Ex6.cpp", flags="-Wno-ignored-attributes")
-dyn.load(dynlib("Ex6"))
+#compile("Ex6.cpp", flags="-Wno-ignored-attributes")
+#dyn.load(dynlib("Ex6"))
 
 # Don't plot stuff
 Plot <- F
@@ -35,7 +35,7 @@ Expl <- scan("ExploitRate.dat",n=Nyear)
 Expl <- c(Expl,Expl,Expl)
 cat(r,k,q1,q2,SigmaR,"\n")
 
-Nsim <- 50  # 50
+Nsim <- 10  # 50
 set.seed(19101)
 
 # Declare objects
@@ -43,11 +43,12 @@ hake <- NULL
 TrueVals <- matrix(nrow=Nsim,ncol=4)
 Estimates <- array(0,dim=c(3,Nsim,4))
 
-# Conduct the simulation stuff
-for (Isim in 1:Nsim)
- {
-  cat("Starting simulation",Isim,"\n")
+#Conduct the simulation stuff
   
+  simulate <- function(model_type){
+    for (Isim in 1:Nsim)
+    {
+      cat("Starting simulation",Isim,"\n")
   # Generate a true population   
   TrueB <- rep(0,Nyear+1); C <- rep(0,Nyear); I1 <- rep(0,Nyear); I2 <- rep(0,Nyear)
   TrueEps <- rnorm(Nyear,0,SigmaR)
@@ -58,27 +59,21 @@ for (Isim in 1:Nsim)
     I1[Iyear] <- q1*TrueB[Iyear]*exp(rnorm(1,0,SigmaI)) 
     I2[Iyear] <- q2*TrueB[Iyear]*exp(rnorm(1,0,SigmaI)) 
     TrueB[Iyear+1] <- (TrueB[Iyear] + r*TrueB[Iyear]*(1.0-TrueB[Iyear]/k) - C[Iyear])*exp(TrueEps[Iyear])
-   }  
+  }  
+  
    hake$t <- 1:Nyear; hake$C <- C; hake$I1 <- I1; hake$I2 <- I2
    if (Plot==T) plot(hake$t,TrueB[1:Nyear],xlab="Year",ylab="TrueB",type="l",ylim=c(0,max(TrueB)*1.1))
    TrueVals[Isim,1] <- r*k/4
    TrueVals[Isim,2] <- TrueB[Nyear+1]
    TrueVals[Isim,3] <- TrueB[Nyear+1]/k
    TrueVals[Isim,4] <- SigmaR
-   
-
+    
+    
+   if (model_type==1){
    # Fit the observation error estimator (class version)
    parameters <- list(logR=-1.1, logK=10.0, logQ1=-7.9, logQ2=-7.9, logSigma=log(SigmaI),FF=rep(-2,Nyear),Eps=rep(0,Nyear),LogSigmaR=-1)
-   #map <- list(Eps=rep(factor(NA),Nyear),LogSigmaR=factor(NA),logSigma=factor(NA),logQ2=factor(NA))
-   #model <- MakeADFun(hake, parameters,DLL="Ex6Class",map=map,control=list(eval.max=10000,iter.max=1000,rel.tol=1e-15),silent=T)
-   #fit <- nlminb(model$par, model$fn, model$gr)
-   #for (i in 1:3) fit <- nlminb(model$env$last.par.best, model$fn, model$gr)
-   #rep <- sdreport(model)
-   #print(summary(rep))
-
-   # Fit the observation error estimator (final version)
-   map <- list(Eps=rep(factor(NA),Nyear),LogSigmaR=factor(NA),logSigma=factor(NA))
-   model <- MakeADFun(hake, parameters,DLL="Ex6",map=map,control=list(eval.max=10000,iter.max=1000,rel.tol=1e-15),silent=T)
+   map <- list(Eps=rep(factor(NA),Nyear),LogSigmaR=factor(NA))
+   model <- MakeADFun(hake, parameters,DLL="Ex6Class",map=map,control=list(eval.max=10000,iter.max=1000,rel.tol=1e-15),silent=T)
    fit <- nlminb(model$par, model$fn, model$gr)
    for (i in 1:3) fit <- nlminb(model$env$last.par.best, model$fn, model$gr)
    rep <- sdreport(model)
@@ -88,11 +83,13 @@ for (Isim in 1:Nsim)
    Estimates[1,Isim,2] <- Report$B[Nyear+1]
    Estimates[1,Isim,3] <- Report$B[Nyear+1]/Report$k
    if (Plot==T) DoPlots(hake)
-
+   }
+   
+   if(model_type==2){
    # Fit the state space model (errors in variables)
-   map <- list(LogSigmaR=factor(NA),logSigma=factor(NA))
    parameters <- list(logR=-1.1, logK=10.0, logQ1=-7.9, logQ2=-7.9, logSigma=log(SigmaI),FF=rep(-2,Nyear),Eps=rep(0,Nyear),LogSigmaR=-1)
-   model <- MakeADFun(hake, parameters,DLL="Ex6",map=map,control=list(eval.max=10000,iter.max=1000,rel.tol=1e-15),silent=T)
+   map <- list(LogSigmaR=factor(NA),logSigma=factor(NA))
+   model <- MakeADFun(hake, parameters,DLL="Ex6Class",map=map,control=list(eval.max=10000,iter.max=1000,rel.tol=1e-15),silent=T)
    fit <- nlminb(model$par, model$fn, model$gr)
    for (i in 1:3) fit <- nlminb(model$env$last.par.best, model$fn, model$gr)
    rep <- sdreport(model)
@@ -102,11 +99,13 @@ for (Isim in 1:Nsim)
    Estimates[2,Isim,2] <- Report$B[Nyear+1]
    Estimates[2,Isim,3] <- Report$B[Nyear+1]/Report$k
    if (Plot==T) DoPlots(hake)
-
+   }
+   
+   if(model_type==3){
    # Fit the state space model (Random effects)
    map <- list(logSigma=factor(NA))
    parameters <- list(logR=-1.1, logK=10.0, logQ1=-7.9, logQ2=-7.9, logSigma=log(SigmaI),FF=rep(-2,Nyear),Eps=rep(0,Nyear),LogSigmaR=-1)
-   model <- MakeADFun(hake, parameters,DLL="Ex6",map=map,random="Eps",control=list(eval.max=10000,iter.max=1000,rel.tol=1e-15),silent=T)
+   model <- MakeADFun(hake, parameters,DLL="Ex6Class",map=map,random="Eps",control=list(eval.max=10000,iter.max=1000,rel.tol=1e-15),silent=T)
    fit <- nlminb(model$par, model$fn, model$gr)
    Index <- which(names(model$env$last.par.best)!="Eps")
    for (i in 1:3) fit <- nlminb(model$env$last.par.best[Index], model$fn, model$gr)
@@ -118,11 +117,14 @@ for (Isim in 1:Nsim)
    Estimates[3,Isim,3] <- Report$B[Nyear+1]/Report$k
    Estimates[3,Isim,4] <- Report$SigmaR
    if (Plot==T) DoPlots(hake)
-   
+   }}
       
  }  
 
- # Histogram of results
+  simulate(3)
+ 
+  
+# Histogram of results
  par(mfrow=c(3,4))
  Titles <- c("MSY","Current biomss","Current depletion","SigmaR")
  for (Iest in 1:3)
@@ -153,3 +155,5 @@ parameters <- list(logR=model$env$last.par.best["logR"],
                    FF=model$env$last.par.best[names(model$env$last.par.best)=="FF"],
                    Eps=model$env$last.par.best[names(model$env$last.par.best)=="Eps"], 
                    LogSigmaR=-1)
+
+ 

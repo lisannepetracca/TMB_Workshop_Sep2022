@@ -1,5 +1,6 @@
-OutDir <- "C:\\courses\\FISH 559_22\\TMB Workshop\\Lecture Examples\\"
-InpDir <- "C:\\courses\\FISH 559_22\\TMB Workshop\\Lecture Examples\\"
+OutDir <- "G:/My Drive/GitHub/TMB_Workshop_Sep2022/Scripts"
+
+InpDir <- "G:/My Drive/GitHub/TMB_Workshop_Sep2022/Scripts"
 
 lectF<-function()
 {
@@ -63,7 +64,7 @@ MakePred<-function(Length,A50,A95)
 
 # =================================================================================================================
 
-f1 <- function(x)
+f1 <- function(x) #this is LL, TMB works with negative LL
 {
  A50 <- exp(x[1])   
  A95 <- exp(x[2])   
@@ -78,7 +79,7 @@ f1 <- function(x)
 
 # =================================================================================================================
 
-DoMCMC<-function(Xinit,Ndim,sd,cor,Nsim=1000,Nburn=0,Nthin=1)
+DoMCMC<-function(Xinit,Ndim,sd,cor,Nsim=1000,Nburn=0,Nthin=1) #here's where the MCMC happens
 {
     
  library(mvtnorm)
@@ -104,12 +105,13 @@ DoMCMC<-function(Xinit,Ndim,sd,cor,Nsim=1000,Nburn=0,Nthin=1)
  Ipnt <- 0; Icnt <- 0
  for (Isim in 1:Nsim)
   {
-    Xnext <- rmvnorm(1, mean=Xcurr, sigma=covar)
-    Fnext <- -1*f1(Xnext)
-    Rand1 <- log(runif(1,0,1))
+    Xnext <- rmvnorm(1, mean=Xcurr, sigma=covar) #candidate param vector is multivar norm centered on current param vector w some variation
+    Fnext <- -1*f1(Xnext) #getting NLL
+    Rand1 <- log(runif(1,0,1)) #take log of random number, adding random noise
     if (Fnext > Fcurr+Rand1)
-     {Fcurr <- Fnext; Xcurr <- Xnext }   
-    if (Isim %% Nthin == 0)
+     {Fcurr <- Fnext; Xcurr <- Xnext }   #is new NLL greater than old one plus the random component?
+                                         #if accept, update FCurr and Xcurr
+    if (Isim %% Nthin == 0) #restricts saving of results only after nburn and after thinning has occurred
      {
       Ipnt <- Ipnt + 1
       if (Ipnt > Nburn) { Icnt <- Icnt + 1; Outs[Icnt,] <- c(Xcurr,Fcurr); }    

@@ -1,8 +1,9 @@
 
-setwd("C:\\courses\\FISH 559_22\\TMB Workshop\\In Class Assignments\\Ex4")
+setwd("G:/My Drive/GitHub/TMB_Workshop_Sep2022/Examples/Ex4")
 
 #devtools::install_github('colemonnahan/adnuts', build_vignettes=TRUE)
 
+#get N matrix to work
 # =================================================================================================================
 
 MCMC <- function(model,covar,xxx,mult,Nreps=22000,Nburns=2000,Nevery=10)
@@ -133,8 +134,6 @@ MCMCSumm <- function(file,best,Nyear,data,map,parameters)
 }  
 
 ################################################################################
-
-setwd("C:\\courses\\FISH 559_22\\TMB Workshop\\In Class Assignments\\Ex4\\")
 
 require(TMB)
 
